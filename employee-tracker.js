@@ -1,7 +1,7 @@
 
 const mysql = require("mysql");
 const inquirer = require("inquirer");
-const promisemysql = require("promise-mysql");
+// const promisemysql = require("promise-mysql");
 
 // Connection Properties
 const connectionProperties = {
@@ -27,7 +27,7 @@ connection.connect((err) => {
 });
 
 // Main menu function
-function mainMenu(){
+function init(){
 
     // Prompt user to choose an option
     inquirer
@@ -74,13 +74,23 @@ function mainMenu(){
             case "Update employee role":
                 updateEmpRole();
                 break;
-            case "Update employee manager":
-                updateEmpMngr();
-                break;
         }
     })
 }
 
 function viewEmp(){
-    var query = "SELECT all"
+    var query = "SELECT e.id, e.first_name, e.last_name, role.title, department.name AS department, role.salary, concat(m.first_name, ' ' ,  m.last_name) AS manager FROM employee e LEFT JOIN employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id ORDER BY ID ASC"
+
+    connection.query(query, function(err, res) {
+        if(err) return err;
+        // console.log(res);
+        
+
+        // Display query results using console.table
+        console.table(res);
+
+        //Back to main menu
+        init();
+    });
 }
+
