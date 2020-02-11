@@ -1,6 +1,7 @@
 
 const mysql = require("mysql");
 const inquirer = require("inquirer");
+// allows you to wrap a mysql request in a promise statement
 const promisemysql = require("promise-mysql");
 
 // Connection Properties
@@ -93,7 +94,7 @@ function viewEmp() {
         init();
     });
 }
-function addEmp(){
+function addEmp() {
 
     // Create two global array to hold 
     let roleArr = [];
@@ -104,26 +105,28 @@ function addEmp(){
     ).then((conn) => {
 
         // Query  all roles and all manager. Pass as a promise
+        let query1 = 'SELECT id, title FROM role ORDER BY title ASC'
+        let query2 = "SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS Employee FROM employee ORDER BY Employee ASC"
         return Promise.all([
-            conn.query('SELECT id, title FROM role ORDER BY title ASC'), 
-            conn.query("SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS Employee FROM employee ORDER BY Employee ASC")
+            conn.query(query1),
+            conn.query(query2)
         ]);
     }).then(([roles, managers]) => {
 
         // Place all roles in array
-        for (i=0; i < roles.length; i++){
+        for (i = 0; i < roles.length; i++) {
             roleArr.push(roles[i].title);
         }
 
         // place all managers in array
-        for (i=0; i < managers.length; i++){
+        for (i = 0; i < managers.length; i++) {
             managerArr.push(managers[i].Employee);
         }
 
         return Promise.all([roles, managers]);
     }).then(([roles, managers]) => {
 
-        // add option for no manager
+        // add option for no manager use unshift to add an item to the array
         managerArr.unshift('--');
 
         inquirer.prompt([
@@ -133,12 +136,12 @@ function addEmp(){
                 type: "input",
                 message: "First name: ",
                 // Validate field is not blank
-                validate: function(input){
-                    if (input === ""){
+                validate: function (input) {
+                    if (input === "") {
                         console.log("**FIELD REQUIRED**");
                         return false;
                     }
-                    else{
+                    else {
                         return true;
                     }
                 }
@@ -149,12 +152,12 @@ function addEmp(){
                 type: "input",
                 message: "Lastname name: ",
                 // Validate field is not blank
-                validate: function(input){
-                    if (input === ""){
+                validate: function (input) {
+                    if (input === "") {
                         console.log("**FIELD REQUIRED**");
                         return false;
                     }
-                    else{
+                    else {
                         return true;
                     }
                 }
@@ -165,7 +168,7 @@ function addEmp(){
                 type: "list",
                 message: "What is their role?",
                 choices: roleArr
-            },{
+            }, {
                 // Prompt user for manager
                 name: "manager",
                 type: "list",
@@ -179,95 +182,272 @@ function addEmp(){
                 let managerID = null;
 
                 // Get ID of role selected
-                for (i=0; i < roles.length; i++){
-                    if (answer.role == roles[i].title){
+                for (i = 0; i < roles.length; i++) {
+                    if (answer.role == roles[i].title) {
                         roleID = roles[i].id;
                     }
                 }
 
                 // get ID of manager selected
-                for (i=0; i < managers.length; i++){
-                    if (answer.manager == managers[i].Employee){
+                for (i = 0; i < managers.length; i++) {
+                    if (answer.manager == managers[i].Employee) {
                         managerID = managers[i].id;
                     }
                 }
 
                 // Add employee
-                connection.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id)
-                VALUES ("${answer.firstName}", "${answer.lastName}", ${roleID}, ${managerID})`, (err, res) => {
-                    if(err) return err;
+                let queryBuilder = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
+                VALUES ("${answer.firstName}", "${answer.lastName}", ${roleID}, ${managerID})`
+                connection.query(queryBuilder, (err, res) => {
+                    if (err) return err;
 
                     // Confirm employee has been added
                     console.log(`\n EMPLOYEE ${answer.firstName} ${answer.lastName} ADDED...\n `);
-                   init();
+                    init();
                 });
             });
     });
 }
 
-// look into mysql documentation for update employee 
-function addRole(){
 
-    // Create array of departments
-    let departmentArr = [];
+// view all employees by role
+function viewEmpByRole(){
+
+    // set global array to store all roles
+    let roleArr = [];
 
     // Create connection using promise-sql
     promisemysql.createConnection(connectionProperties)
     .then((conn) => {
 
-        // Query all departments
-        return conn.query('SELECT id, name FROM department ORDER BY name ASC');
+        // Query all roles
+        return conn.query('SELECT title FROM role');
+    }).then(function(roles){
 
-    }).then((departments) => {
-        
-        // Place all departments in array
-        for (i=0; i < departments.length; i++){
-            departmentArr.push(departments[i].name);
+        // Place all roles within the roleArry
+        for (i=0; i < roles.length; i++){
+            roleArr.push(roles[i].title);
         }
+    }).then(() => {
 
-        return departments;
-    }).then((departments) => {
-        
+        // Prompt user to select a role
+        inquirer.prompt({
+            name: "role",
+            type: "list",
+            message: "Which role would you like to search?",
+            choices: roleArr
+        })    
+        .then((answer) => {
+
+            // Query all employees by role selected by user
+            const query = `SELECT e.id AS ID, e.first_name AS 'First Name', e.last_name AS 'Last Name', role.title AS Title, department.name AS Department, role.salary AS Salary, concat(m.first_name, ' ' ,  m.last_name) AS Manager FROM employee e LEFT JOIN employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id WHERE role.title = '${answer.role}' ORDER BY ID ASC`;
+            connection.query(query, (err, res) => {
+                if(err) return err;
+
+                // show results using console.table
+                console.log("\n");
+                console.table(res);
+                init();
+            });
+        });
+    });
+}
+
+
+
+function addRole() {
+
+                // Create array of departments
+                let departmentArr = [];
+
+                // Create connection using promise-sql
+                promisemysql.createConnection(connectionProperties)
+                    .then((conn) => {
+
+                        // Query all departments
+                        return conn.query('SELECT id, name FROM department ORDER BY name ASC');
+
+                    }).then((departments) => {
+
+                        // Place all departments in array
+                        for (i = 0; i < departments.length; i++) {
+                            departmentArr.push(departments[i].name);
+                        }
+
+                        return departments;
+                    }).then((departments) => {
+
+                        inquirer.prompt([
+                            {
+                                // Prompt user role title
+                                name: "roleTitle",
+                                type: "input",
+                                message: "Role title: "
+                            },
+                            {
+                                // Prompt user for salary
+                                name: "salary",
+                                type: "number",
+                                message: "Salary: "
+                            },
+                            {
+                                // Prompt user to select department role is under
+                                name: "dept",
+                                type: "list",
+                                message: "Department: ",
+                                choices: departmentArr
+                            }]).then((answer) => {
+
+                                // Set department ID variable
+                                let deptID;
+
+                                // get id of department selected
+                                for (i = 0; i < departments.length; i++) {
+                                    if (answer.dept == departments[i].name) {
+                                        deptID = departments[i].id;
+                                    }
+                                }
+
+                                // Added role to role table
+                                let queryBuilder = `INSERT INTO role (title, salary, department_id)
+                                VALUES ("${answer.roleTitle}", ${answer.salary}, ${deptID})`
+                                connection.query(queryBuilder, (err, res) => {
+                                    if (err) return err;
+                                    console.log(`\n ROLE ${answer.roleTitle} ADDED...\n`);
+                                    init();
+                                });
+
+                            });
+
+                    });
+            }
+
+function addDept(){
+
+    inquirer.prompt({
+             // Prompt user for name of department
+             name: "deptName",
+             type: "input",
+             message: "Department Name: "
+    }).then((answer) => {
+                
+        // add department to the table
+        let queryBuilder = `INSERT INTO department (name)VALUES ("${answer.deptName}");`
+        connection.query(queryBuilder, (err, res) => {
+            if(err) return err;
+            console.log("\n DEPARTMENT ADDED...\n ");
+           init();
+        });
+
+    });
+}
+
+function updateEmpRole(){
+    let employeeArr = []
+
+     // Create connection using promise-sql
+     promisemysql.createConnection(connectionProperties
+        ).then((conn) => {
+            let queryBuilder = "SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS Employee FROM employee ORDER BY Employee ASC"
+                  // query all employees
+        return conn.query(queryBuilder);
+    }).then((employees) => {  
+
+                // place employees in array
+                for (i=0; i < employees.length; i++){
+                    employeeArr.push(employees[i].Employee);
+                }
+
+                return employees;
+    }).then((employees) => {
+
         inquirer.prompt([
             {
-                // Prompt user role title
-                name: "roleTitle",
-                type: "input",
-                message: "Role title: "
-            },
-            {
-                // Prompt user for salary
-                name: "salary",
-                type: "number",
-                message: "Salary: "
-            },
-            {   
-                // Prompt user to select department role is under
-                name: "dept",
+                // prompt user to selected employee
+                name: "employee",
                 type: "list",
-                message: "Department: ",
-                choices: departmentArr
-            }]).then((answer) => {
+                message: "Who would you like to edit?",
+                choices: employeeArr
+            }, {
+                 // prompt user to select new manager
+                 name: "manager",
+                 type: "list",
+                 message: "Who is their new Manager?",
+                 choices: employeeArr
+             },]).then((answer) => {
 
-                // Set department ID variable
-                let deptID;
+                let employeeID;
+                let managerID;
 
-                // get id of department selected
-                for (i=0; i < departments.length; i++){
-                    if (answer.dept == departments[i].name){
-                        deptID = departments[i].id;
+                // get ID of selected manager
+                for (i=0; i < employees.length; i++){
+                    if (answer.manager == employees[i].Employee){
+                        managerID = employees[i].id;
                     }
                 }
 
-                // Added role to role table
-                connection.query(`INSERT INTO role (title, salary, department_id)
-                VALUES ("${answer.roleTitle}", ${answer.salary}, ${deptID})`, (err, res) => {
+                // get ID of selected employee
+                for (i=0; i < employees.length; i++){
+                    if (answer.employee == employees[i].Employee){
+                        employeeID = employees[i].id;
+                    }
+                }
+
+                 // update employee with manager ID
+                 let queryBuilder = `UPDATE employee SET manager_id = ${managerID} WHERE id = ${employeeID}`
+                 connection.query(queryBuilder, (err, res) => {
                     if(err) return err;
-                    console.log(`\n ROLE ${answer.roleTitle} ADDED...\n`);
-                    init();
+
+                      // confirm update employee
+                      console.log(`\n ${answer.employee} MANAGER UPDATED TO ${answer.manager}...\n`);
+
+                     // go back to main menu
+                     init();
+                    });
                 });
+        });
 
+}
+
+function viewEmpByDept(){
+    let deptArr = [];
+
+    // Create new connection using promise-sql
+    promisemysql.createConnection(connectionProperties
+        ).then((conn) => {
+
+            // Query just names of departments
+        return conn.query('SELECT name FROM department');
+    }).then(function(value){
+
+        // Place all names within deptArr
+        deptQuery = value;
+        for (i=0; i < value.length; i++){
+            deptArr.push(value[i].name);
+
+        }
+    }).then(() => {
+
+         // Prompt user to select department from array of departments
+         inquirer.prompt({
+            name: "department",
+            type: "list",
+            message: "Which department would you like to search?",
+            choices: deptArr
+        })      .then((answer) => {
+
+            // Query all employees depending on selected department
+            const query = `SELECT e.id AS ID, e.first_name AS 'First Name', e.last_name AS 'Last Name', role.title AS Title, department.name AS Department, role.salary AS Salary, concat(m.first_name, ' ' ,  m.last_name) AS Manager FROM employee e LEFT JOIN employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id WHERE department.name = '${answer.department}' ORDER BY ID ASC`;
+            connection.query(query, (err, res) => {
+                if(err) return err;
+                 // Show results in console.table
+                 console.log("\n");
+                 console.table(res);
+ 
+                 // Back to main menu
+                 init();
+                });
             });
-
-    });
+        });
+        
 }
