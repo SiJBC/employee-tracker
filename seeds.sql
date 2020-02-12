@@ -46,31 +46,31 @@ VALUES (9, "IT Manager", 105000, 4);
 ----- Employees Seeds -----
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUES (4, "Simon", "Colman", 3, null);
+VALUES (4, "Simon", "Colman1", 3, null);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUES (5, "Simon", "Colman", 4, null);
+VALUES (5, "Simon", "Colman2", 4, null);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUES (7, "Simon", "Colman", 6, null);
+VALUES (7, "Simon", "Colman3", 6, null);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUES (10, "Simon", "Colman", 9, null);
+VALUES (10, "Simon", "Colman4", 9, null);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUES (3, "Simon", "Colman", 2, 4);
+VALUES (3, "Simon", "Colman5", 2, 4);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUES (1, "Simon", "Colman", 1, 3);
+VALUES (1, "Simon", "Colman6", 1, 3);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUES (2, "Simon", "Colman", 1, 3);
+VALUES (2, "Simon", "Colman7", 1, 3);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUES (6, "Simon", "Colman", 5, 7);
+VALUES (6, "Simon", "Colman8", 5, 7);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUES (8, "Simon", "Colman", 7, 10);
+VALUES (8, "Simon", "Colman9", 7, 10);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUES (9, "Simon", "Colman", 8, 10);
+VALUES (9, "Simon", "Colman10", 8, 10);
