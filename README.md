@@ -1,6 +1,6 @@
 # employee-tracker
 
-The application utilized user input to change the sql queries to interact with the database.
+The application utilized user input to change the sql queries to interact with the database employees_db.
 
 Begin the application by opening the folder in the console and type in:
 1. npm install 
@@ -21,8 +21,9 @@ What would you like to do ?
                 "Update employee Manager",
                 "Delete employee",
                 "Delete Role",
+                "Delete department"
 
 
 Some prompts will require a confirmation as they will alter large amounts of columns in the database
 
-A bonu part of the project the application should include calculate the department budget based on salaries but I was unable to complete this due to time restraints.
+Additional features of the application include a department budget
