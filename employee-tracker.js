@@ -44,6 +44,7 @@ function init() {
                 "Add role",
                 "Add department",
                 "Update employee role",
+                "Update employee Manager",
                 "Delete employee",
                 "Delete Role",
 
@@ -77,17 +78,22 @@ function init() {
                     addRole();
                     break;
 
+                case "Update employee manager":
+                    updateEmpMng();
+                    break;
+
+                case "Delete employee":
+                    deleteEmp();
+                    break;
+                case "Delete Role":
+                    deleteRole();
+                    break;
                 case "Update employee role":
                     updateEmpRole();
                     break;
-                    
-                case "Delete employee":
-                        deleteEmp();
-                        break;
-                case "Delete Role":
-                    deleteRole();    
-                    break;
-                }
+
+            }
+
         })
 }
 
@@ -354,14 +360,14 @@ function addDept() {
     });
 }
 
-function updateEmpRole() {
+function updateEmpMng() {
     let employeeArr = []
 
     // Create connection using promise-sql
     promisemysql.createConnection(connectionProperties
     ).then((conn) => {
         let queryBuilder = "SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS Employee FROM employee ORDER BY Employee ASC"
-        // query all employees
+
         return conn.query(queryBuilder);
     }).then((employees) => {
 
@@ -369,8 +375,9 @@ function updateEmpRole() {
         for (i = 0; i < employees.length; i++) {
             employeeArr.push(employees[i].Employee);
         }
-
+        console.log(employeeArr)
         return employees;
+
     }).then((employees) => {
 
         inquirer.prompt([
@@ -464,8 +471,8 @@ function viewEmpByDept() {
 
 }
 // Delete employee
-function deleteEmp(){
-   
+function deleteEmp() {
+
 
     // Create global employee array
     let employeeArr = [];
@@ -476,11 +483,11 @@ function deleteEmp(){
 
         // Query all employees
         deleteQuery = "SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS employee FROM employee ORDER BY Employee ASC"
-        return  conn.query(deleteQuery);
+        return conn.query(deleteQuery);
     }).then((employees) => {
 
         // Place all employees in array
-        for (i=0; i < employees.length; i++){
+        for (i = 0; i < employees.length; i++) {
             employeeArr.push(employees[i].employee);
         }
 
@@ -499,43 +506,43 @@ function deleteEmp(){
                 choices: ["NO", "YES"]
             }]).then((answer) => {
 
-                if(answer.yesNo == "YES"){
+                if (answer.yesNo == "YES") {
                     let employeeID;
 
                     // if confirmed, get ID of employee selected
-                    for (i=0; i < employees.length; i++){
-                        if (answer.employee == employees[i].employee){
+                    for (i = 0; i < employees.length; i++) {
+                        if (answer.employee == employees[i].employee) {
                             employeeID = employees[i].id;
                         }
                     }
-                    
+
                     // deleted selected employee
                     let query = `DELETE FROM employee WHERE id=${employeeID};`
                     connection.query(query, (err, res) => {
-                        if(err) return err;
+                        if (err) return err;
 
                         // confirm deleted employee
                         console.log(`\n EMPLOYEE '${answer.employee}' DELETED...\n `);
-                        
+
                         // back to main menu
                         init();
                     });
-                } 
+                }
                 else {
-                    
+
                     // if not confirmed, go back to main menu
                     console.log(`\n EMPLOYEE '${answer.employee}' NOT DELETED...\n `);
 
                     // back to main menu
                     init();
                 }
-                
+
             });
     });
 }
 
 
-function deleteRole(){
+function deleteRole() {
 
     // Create role array
     let roleArr = [];
@@ -547,10 +554,10 @@ function deleteRole(){
         // query all roles
         let query = "SELECT id, title FROM role"
         return conn.query(query);
-    }).then((roles) => {    
+    }).then((roles) => {
 
         // add all roles to array
-        for (i=0; i < roles.length; i++){
+        for (i = 0; i < roles.length; i++) {
             roleArr.push(roles[i].title);
         }
 
@@ -583,20 +590,20 @@ function deleteRole(){
 
             }]).then((answer) => {
 
-                if(answer.confirmDelete === answer.role){
+                if (answer.confirmDelete === answer.role) {
 
                     // get role id of of selected role
                     let roleID;
-                    for (i=0; i < roles.length; i++){
-                        if (answer.role == roles[i].title){
+                    for (i = 0; i < roles.length; i++) {
+                        if (answer.role == roles[i].title) {
                             roleID = roles[i].id;
                         }
                     }
-                    
+
                     // delete role
                     let deleteQuery = `DELETE FROM role WHERE id=${roleID};`
                     connection.query(deleteQuery, (err, res) => {
-                        if(err) return err;
+                        if (err) return err;
 
                         // confirm role has been added 
                         console.log(`\n ROLE '${answer.role}' DELETED...\n `);
@@ -604,7 +611,7 @@ function deleteRole(){
                         //back to main menu
                         init();
                     });
-                } 
+                }
                 else {
 
                     // if not confirmed, do not delete
@@ -613,8 +620,86 @@ function deleteRole(){
                     //back to main menu
                     init();
                 }
-                
+
             });
         })
     });
+}
+
+function updateEmpRole() {
+
+    // create employee and role array
+    let employeeArr = [];
+    let roleArr = [];
+
+    // Create connection using promise-sql
+    promisemysql.createConnection(connectionProperties
+    ).then((conn) => {
+        return Promise.all([
+
+            // query all roles and employee
+            conn.query('SELECT id, title FROM role ORDER BY title ASC'),
+            conn.query("SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS Employee FROM employee ORDER BY Employee ASC")
+        ]);
+    }).then(([roles, employees]) => {
+
+        // place all roles in array
+        for (i = 0; i < roles.length; i++) {
+            roleArr.push(roles[i].title);
+        }
+
+        // place all empoyees in array
+        for (i = 0; i < employees.length; i++) {
+            employeeArr.push(employees[i].Employee);
+            //console.log(value[i].name);
+        }
+
+        return Promise.all([roles, employees]);
+    }).then(([roles, employees]) => {
+
+        inquirer.prompt([
+            {
+                // prompt user to select employee
+                name: "employee",
+                type: "list",
+                message: "Who would you like to edit?",
+                choices: employeeArr
+            }, {
+                // Select role to update employee
+                name: "role",
+                type: "list",
+                message: "What is their new role?",
+                choices: roleArr
+            },]).then((answer) => {
+
+                let roleID;
+                let employeeID;
+
+                /// get ID of role selected
+                for (i = 0; i < roles.length; i++) {
+                    if (answer.role == roles[i].title) {
+                        roleID = roles[i].id;
+                    }
+                }
+
+                // get ID of employee selected
+                for (i = 0; i < employees.length; i++) {
+                    if (answer.employee == employees[i].Employee) {
+                        employeeID = employees[i].id;
+                    }
+                }
+
+                // update employee with new role
+                connection.query(`UPDATE employee SET role_id = ${roleID} WHERE id = ${employeeID}`, (err, res) => {
+                    if (err) return err;
+
+                    // confirm update employee
+                    console.log(`\n ${answer.employee} ROLE UPDATED TO ${answer.role}...\n `);
+
+                    // back to main menu
+                    init();
+                });
+            });
+    });
+
 }
