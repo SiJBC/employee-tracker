@@ -47,6 +47,7 @@ function init() {
                 "Update employee Manager",
                 "Delete employee",
                 "Delete Role",
+                "Delete department",
 
             ]
         })
