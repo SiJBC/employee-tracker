@@ -1,7 +1,7 @@
 
 const mysql = require("mysql");
 const inquirer = require("inquirer");
-// allows you to wrap a mysql request in a promise statement
+// wraps all the mysql connections request in a promise statement
 const promisemysql = require("promise-mysql");
 
 // Connection Properties
