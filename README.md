@@ -26,4 +26,4 @@ What would you like to do ?
 
 Some prompts will require a confirmation as they will alter large amounts of columns in the database
 
-Additional features of the application include a department budget
+Additional features for future work on the application include a department budget and total budget 
